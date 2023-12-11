@@ -76,7 +76,12 @@ struct Project {
             modules.push_back(val);
             Submodule module;
             f.open(module + "/build.json");
+            while (f.good() && getline(f, line)) buff += line + "\n";
             f.close();
+            json Json = json::parse(buff);
+            buff = "";
+            module.module = Json["module"];
+            for (auto val0 : 
         }
     }
 };
