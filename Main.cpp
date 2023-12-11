@@ -2,6 +2,8 @@
 #include <fstream>
 #include <iostream>
 #include <thread>
+#include "json.h"
+using namespace nlohmann;
 
 struct Settings {
     std::string cxx, cxx_opts;
@@ -43,6 +45,7 @@ struct Project {
     void build() {
         std::cout << "===> Started building " << project << "\n";
         for (Submodule const module : modules) {
+            system(("mkdir -p build/{exec,libs,objs}/" + module.module).c_str());
             std::cout << "===> Started building " << module.module << "\n";
             for (Object const obj : module.objs) std::thread(buildObject, module.module, module.incDirs, obj, settings).join();
             while (finished != module.objs.size();
@@ -51,6 +54,30 @@ struct Project {
             std::cout << "===> Finished building " << module.module << "\n";
         }
         std::cout << "===> Finished building " << project << "\n";
+    }
+    void config() {
+        system("mkdir -p build/{, exec,libs,objs}");
+        std::string buff, line;
+        std::fstream f ("config.json");
+        while (f.good() && getline(f, line)) buff += line + "\n";
+        f.close();
+        json JSON = json::parse(buff);
+        buff = "";
+        project = JSON["project"];
+
+        settings.cxx == JSON["cxx"];
+        settings.cxx_opts = JSON["cxx_opts"];
+        settings.linker == JSON["linker"];
+        settings.linker_opts = JSON["linker_opts"];
+        settings.staticld == JSON["static"];
+        settings.static_opts = JSON["static_opts"];
+
+        for (auto val : JSON["modules"]) {
+            modules.push_back(val);
+            Submodule module;
+            f.open(module + "/build.json");
+            f.close();
+        }
     }
 };
 
