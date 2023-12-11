@@ -81,10 +81,37 @@ struct Project {
             json Json = json::parse(buff);
             buff = "";
             module.module = Json["module"];
-            for (auto val0 : 
+            for (auto val0 : Json["libDirs"]) module.libDirs.push_back(val0);
+            for (auto val0 : Json["incDirs"]) module.incDirs.push_back(val0);
+            for (auto val0 : Json["objs"]) {
+                Object obj;
+                obj.name = val0["name"];
+                obj.type = val0["type"];
+                obj.ext = val0["ext"];
+                module.objs.push_back(obj);
+            }
+            for (auto val0 : Json["outs"]) {
+                Output out;
+                out.name = val0["name"];
+                out.type = val0["type"];
+                for (auto val1 : val0["libs"]) out.libs.push_back(val1);
+                for (auto val1 : val0["objs"]) out.objs.push_back(val1);
+                module.outs.push_back(out);
+            }
         }
     }
 };
 
 int main(int argc, char **argc) {
+    int opt = 0;
+    for (int i = 1; i < argc; i++) {
+        if (std::string(argv[i]) == "help") opt = 0;
+        if (std::string(argv[i]) == "build") opt = 1;
+    }
+    if (!opt);
+    if (opt == 1) {
+        Project project;
+        project.config();
+        project.build();
+    }
 }
